@@ -13,12 +13,13 @@ from src.app.models.strategy import (
     DAlembertStrategy
 )
 
-from src.app.services.game_session_manager import GameSessionManager
+from src.app.services.game_session_manager import GameSessionManager 
 from src.app.models.session_models import SessionParameters
 from src.app.models.session_enums import SessionEndReason
 from src.app.models.odds import OddsType
 from src.app.models.outcome_strategy import RandomOutcomeStrategy, WeightedProbabilityStrategy
 from src.app.services.win_loss_calculator import WinLossCalculator
+from src.app.ui.safe_input_handler import SafeInputHandler
 
 current_betting_service = None
 current_stake_service = None
@@ -30,6 +31,8 @@ def menu():
     global current_betting_service
     global session_manager
     advanced_calculator = None
+    safe_input = SafeInputHandler()
+    
 
     while True:
         print("\n--- GAMBLING APP MENU ---")
@@ -54,7 +57,8 @@ def menu():
         print("19. Simulate Game with Custom Odds")
         print("20. View Comprehensive Statistics")
         print("21. Save & Exit Calculator")
-        print("22. Exit")
+        print("22. Test Safe Input Validator")
+        print("23. Exit")
 
         choice = input("Choice: ")
 
@@ -326,6 +330,17 @@ def menu():
             advanced_calculator = None
 
         elif choice == "22":
+            print("\n--- STAKE VALIDATION TEST ---")
+            print("(Try entering text, negative numbers, or massive numbers)")
+            valid_stake = safe_input.get_valid_stake("Enter Initial Stake: ")
+            print(f"Success! Captured clean stake: {valid_stake}")
+            
+            print("\n--- BET VALIDATION TEST ---")
+            print(f"(Try betting more than your current stake of {valid_stake})")
+            valid_bet = safe_input.get_valid_bet("Enter Bet Amount: ", valid_stake)
+            print(f"Success! Captured clean bet: {valid_bet}")
+
+        elif choice == "23":
             print("Exiting...")
             break
 
