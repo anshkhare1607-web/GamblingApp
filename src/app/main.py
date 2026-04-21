@@ -1,10 +1,10 @@
-# UC 01 : Gambler Profile Management
+# UC 02 : Stake Management Operations
 # 
 # author : Developer 
-# version : 1.0
+# version : 2.0
 # 
 
-from src.app.ui.menu import menu
+from src.app.ui.menu import menu 
 
 if __name__ == "__main__":
     menu()
