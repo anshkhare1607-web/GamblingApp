@@ -3,7 +3,6 @@ from src.app.models.betting_preferences import BettingPreferences
 from src.app.services.gambler_service import GamblerService
 from src.app.models.statistics import GamblerStatistics
 from src.app.services.stake_management_service import StakeManagementService
-
 from src.app.services.betting_service import BettingService
 from src.app.models.strategy import (
     FixedAmountStrategy, 
@@ -17,6 +16,9 @@ from src.app.models.strategy import (
 from src.app.services.game_session_manager import GameSessionManager
 from src.app.models.session_models import SessionParameters
 from src.app.models.session_enums import SessionEndReason
+from src.app.models.odds import OddsType
+from src.app.models.outcome_strategy import RandomOutcomeStrategy, WeightedProbabilityStrategy
+from src.app.services.win_loss_calculator import WinLossCalculator
 
 current_betting_service = None
 current_stake_service = None
@@ -27,6 +29,8 @@ def menu():
     global current_stake_service
     global current_betting_service
     global session_manager
+    advanced_calculator = None
+
     while True:
         print("\n--- GAMBLING APP MENU ---")
         print("1. Create Gambler")
@@ -46,7 +50,11 @@ def menu():
         print("15. Resume Session")
         print("16. End Session Manually")
         print("17. View Session Stats")
-        print("18. Exit")
+        print("18. Init Advanced Odds Calculator")
+        print("19. Simulate Game with Custom Odds")
+        print("20. View Comprehensive Statistics")
+        print("21. Save & Exit Calculator")
+        print("22. Exit")
 
         choice = input("Choice: ")
 
@@ -260,6 +268,64 @@ def menu():
                     print(f"{k}: {v}")
 
         elif choice == "18":
+            sid = int(input("Enter Session ID to track: "))
+            stake = float(input("Starting Balance for Calc: "))
+            edge = float(input("House Edge % (e.g. 5 for 5%): "))
+            
+            strat = WeightedProbabilityStrategy(edge) if edge > 0 else RandomOutcomeStrategy()
+            advanced_calculator = WinLossCalculator(sid, stake, strat)
+            print(f"Advanced Calculator Initialized with House Edge: {edge}%")
+
+        elif choice == "19":
+            if not advanced_calculator:
+                print("Initialize Calculator (Option 19) first!")
+                continue
+            
+            amt = float(input("Bet Amount: "))
+            prob = float(input("Base Win Probability (0.01 to 1.00): "))
+            
+            print("Odds Types: 1. FIXED  2. PROBABILITY  3. AMERICAN  4. DECIMAL")
+            o_choice = input("Select Type: ")
+            o_val = float(input("Enter Odds Value (e.g. 2.5, +150): "))
+            
+            try:
+                odds_type = OddsType.FIXED
+                if o_choice == "2": odds_type = OddsType.PROBABILITY_BASED
+                elif o_choice == "3": odds_type = OddsType.AMERICAN
+                elif o_choice == "4": odds_type = OddsType.DECIMAL
+                
+                res = advanced_calculator.process_game(amt, odds_type, o_val, prob)
+                print(f"Outcome: {res.outcome}! Gross Payout: {res.winnings:.2f}. New Balance: {res.stake_after:.2f}")
+            except Exception as e:
+                print(f"Error: {e}")
+
+        elif choice == "20":
+            if not advanced_calculator:
+                print("Initialize Calculator (Option 19) first!")
+                continue
+            
+            stats = advanced_calculator.generate_statistics()
+            print("\n--- COMPREHENSIVE WIN/LOSS STATISTICS ---")
+            print(f"Games Played: {stats.total_games} (W: {stats.wins} / L: {stats.losses})")
+            print(f"Win Rate: {stats.win_rate:.2f}%")
+            print(f"Total Winnings: ${stats.total_winnings:.2f}")
+            print(f"Total Losses: ${stats.total_losses:.2f}")
+            print(f"Net Profit: ${stats.net_profit:.2f}")
+            print(f"Avg Win: ${stats.avg_win:.2f} | Avg Loss: ${stats.avg_loss:.2f}")
+            print(f"Profit Factor: {stats.profit_factor:.2f}")
+            print(f"Longest Win Streak: {stats.longest_win_streak}")
+            print(f"Longest Loss Streak: {stats.longest_loss_streak}")
+
+        elif choice == "21":
+            if not advanced_calculator:
+                print("Initialize Calculator (Option 19) first!")
+                continue
+            gid = int(input("Confirm Gambler ID to save stats: "))
+            advanced_calculator.save_statistics(gid)
+            print("Advanced Statistics saved to database.")
+            advanced_calculator = None
+
+        elif choice == "22":
             print("Exiting...")
             break
 

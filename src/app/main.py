@@ -1,7 +1,7 @@
-# UC 04 : Game Session Management
+# UC 05 : Win/Loss Calculation
 # 
 # author : Developer 
-# version : 4.0
+# version : 5.0
 # 
 
 from src.app.ui.menu import menu 
