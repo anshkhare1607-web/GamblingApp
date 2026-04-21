@@ -1,10 +1,11 @@
-# UC 06 : Input Validation and Error Handling
+# UC 07 : User Interaction
 # 
 # author : Developer 
-# version : 6.0
+# version : 7.0
 # 
 
-from src.app.ui.menu import menu 
+from src.app.engine.simple_game_engine import SimpleGameEngine
 
 if __name__ == "__main__":
-    menu()
+    engine = SimpleGameEngine()
+    engine.run()
