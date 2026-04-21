@@ -1,7 +1,7 @@
-# UC 03 : Betting Mechanism
+# UC 04 : Game Session Management
 # 
 # author : Developer 
-# version : 3.0
+# version : 4.0
 # 
 
 from src.app.ui.menu import menu 

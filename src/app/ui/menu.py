@@ -14,11 +14,19 @@ from src.app.models.strategy import (
     DAlembertStrategy
 )
 
+from src.app.services.game_session_manager import GameSessionManager
+from src.app.models.session_models import SessionParameters
+from src.app.models.session_enums import SessionEndReason
+
 current_betting_service = None
 current_stake_service = None
+current_betting_service = None
+session_manager = GameSessionManager()
 
 def menu():
     global current_stake_service
+    global current_betting_service
+    global session_manager
     while True:
         print("\n--- GAMBLING APP MENU ---")
         print("1. Create Gambler")
@@ -32,7 +40,13 @@ def menu():
         print("9. Start Betting Session")
         print("10. Place Manual Bet")
         print("11. Run Strategy Simulation")
-        print("12. Exit")
+        print("12. Start Managed Session")
+        print("13. Play Game")
+        print("14. Pause Session")
+        print("15. Resume Session")
+        print("16. End Session Manually")
+        print("17. View Session Stats")
+        print("18. Exit")
 
         choice = input("Choice: ")
 
@@ -185,6 +199,67 @@ def menu():
                 print(r)
 
         elif choice == "12":
+            g_id = int(input("Gambler ID: "))
+            stake = float(input("Initial Stake: "))
+            up_limit = float(input("Upper Win Limit: "))
+            low_limit = float(input("Lower Loss Limit: "))
+            
+            params = SessionParameters(
+                upper_limit=up_limit, 
+                lower_limit=low_limit, 
+                min_bet=10, 
+                max_bet=500, 
+                max_games=100, 
+                max_duration_sec=3600
+            )
+            try:
+                sess = session_manager.start_new_session(g_id, stake, params)
+                print(f"Session {sess.session_id} started successfully!")
+            except Exception as e:
+                print(f"Error: {e}")
+
+        elif choice == "13":
+            g_id = int(input("Gambler ID: "))
+            sess = session_manager.get_session(g_id)
+            if not sess:
+                print("No active session found.")
+                continue
+            amt = float(input("Bet Amount: "))
+            res = sess.play_game(amt)
+            print(res)
+
+        elif choice == "14":
+            g_id = int(input("Gambler ID: "))
+            sess = session_manager.get_session(g_id)
+            if sess:
+                reason = input("Pause Reason: ")
+                sess.pause(reason)
+                print("Session Paused.")
+
+        elif choice == "15":
+            g_id = int(input("Gambler ID: "))
+            sess = session_manager.get_session(g_id)
+            if sess:
+                sess.resume()
+                print("Session Resumed.")
+
+        elif choice == "16":
+            g_id = int(input("Gambler ID: "))
+            sess = session_manager.get_session(g_id)
+            if sess:
+                sess.end_session(SessionEndReason.MANUAL)
+                print("Session Ended Manually.")
+
+        elif choice == "17":
+            g_id = int(input("Gambler ID: "))
+            sess = session_manager.get_session(g_id)
+            if sess:
+                stats = sess.get_statistics()
+                print("\n--- SESSION STATS ---")
+                for k, v in stats.items():
+                    print(f"{k}: {v}")
+
+        elif choice == "18":
             print("Exiting...")
             break
 
