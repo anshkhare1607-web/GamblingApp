@@ -1,7 +1,7 @@
-# UC 05 : Win/Loss Calculation
+# UC 06 : Input Validation and Error Handling
 # 
 # author : Developer 
-# version : 5.0
+# version : 6.0
 # 
 
 from src.app.ui.menu import menu 
