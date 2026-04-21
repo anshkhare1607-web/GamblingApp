@@ -4,6 +4,17 @@ from src.app.services.gambler_service import GamblerService
 from src.app.models.statistics import GamblerStatistics
 from src.app.services.stake_management_service import StakeManagementService
 
+from src.app.services.betting_service import BettingService
+from src.app.models.strategy import (
+    FixedAmountStrategy, 
+    PercentageStrategy, 
+    MartingaleStrategy, 
+    ReverseMartingaleStrategy, 
+    FibonacciStrategy, 
+    DAlembertStrategy
+)
+
+current_betting_service = None
 current_stake_service = None
 
 def menu():
@@ -18,7 +29,10 @@ def menu():
         print("6. Place Bet")
         print("7. Process Outcome")
         print("8. View Stake Report")
-        print("9. Exit")
+        print("9. Start Betting Session")
+        print("10. Place Manual Bet")
+        print("11. Run Strategy Simulation")
+        print("12. Exit")
 
         choice = input("Choice: ")
 
@@ -44,7 +58,7 @@ def menu():
             gid = int(input("ID: "))
             name = input("New Name: ")
             GamblerService.update_gambler(gid, name=name)
-            print("Gambler updated.")
+            print("Gambler updated")
 
         elif choice == "3":
             gid = int(input("ID: "))
@@ -68,8 +82,8 @@ def menu():
         elif choice == "5":
             g_id = int(input("Gambler ID: "))
             stake = float(input("Initial Stake: "))
-            min_limit = float(input("Lower Limit (e.g. 100): "))
-            max_limit = float(input("Upper Limit (e.g. 2000): "))
+            min_limit = float(input("Lower Limit : "))
+            max_limit = float(input("Upper Limit : "))
             try:
                 current_stake_service = StakeManagementService(g_id, stake, min_limit, max_limit)
                 print("Stake management session initialized.")
@@ -87,17 +101,17 @@ def menu():
 
         elif choice == "7":
             if not current_stake_service:
-                print("Initialize stake session (Option 5) first!")
+                print("Initialize stake session (Option 5) first")
                 continue
             # If the user lost the bet, they win 0. If they won, input the payout amount.
-            amt = float(input("Amount Won (Enter 0 if loss): "))
+            amt = float(input("Amount Won (Enter 0 if loss) : "))
             b_id = input("Bet ID: ")
             status = current_stake_service.process_bet_outcome(amt, b_id)
-            print(f"Outcome processed. Current Balance: {current_stake_service.monitor.current_stake}. Status: {status}")
+            print(f"Outcome processed. Current Balance : {current_stake_service.monitor.current_stake}. Status: {status}")
 
         elif choice == "8":
             if not current_stake_service:
-                print("Initialize stake session (Option 5) first!")
+                print("Initialize stake session (Option 5) first")
                 continue
             report = current_stake_service.generate_report()
             print("\n--- STAKE REPORT ---")
@@ -111,6 +125,66 @@ def menu():
                 print(f"  [{t.timestamp.strftime('%H:%M:%S')}] {t.transaction_type.value} | Amt: {t.amount} | Bal: {t.balance_after} | ID: {t.bet_id}")
 
         elif choice == "9":
+            if not current_stake_service:
+                print("Initialize stake session (Option 5) first")
+                continue
+            current_betting_service = BettingService(current_stake_service)
+            sid = current_betting_service.start_session()
+            print(f"Betting Session {sid} started.")
+
+        elif choice == "10":
+            if not current_betting_service:
+                print("Start Betting Session (Option 9) first")
+                continue
+            try:
+                amt = float(input("Bet Amount: "))
+                prob = float(input("Win Probability (0.01 to 1.00): "))
+                outcome, win_amt, status = current_betting_service.place_bet(amt, prob)
+                print(f"Outcome: {outcome}! Won: {win_amt:.2f}. Balance: {current_stake_service.monitor.current_stake}. Status: {status}")
+            except Exception as e:
+                print(f"Error: {e}")
+
+        elif choice == "11":
+            if not current_betting_service:
+                print("Start Betting Session (Option 9) first!")
+                continue
+            
+            base = float(input("Base Bet Amount : "))
+            prob = float(input("Win Probability (e.g., 0.45) : "))
+            runs = int(input("Number of Consecutive Bets : "))
+            
+            print("\n--- STRATEGIES ---")
+            print("1. Fixed Amount")
+            print("2. Percentage (5%)")
+            print("3. Martingale")
+            print("4. Reverse Martingale")
+            print("5. Fibonacci")
+            print("6. D'Alembert")
+            s_choice = input("Select Strategy: ")
+            
+            if s_choice == "1":
+                strat = FixedAmountStrategy()
+            elif s_choice == "2":
+                strat = PercentageStrategy(5.0)
+            elif s_choice == "3":
+                strat = MartingaleStrategy()
+            elif s_choice == "4":
+                strat = ReverseMartingaleStrategy()
+            elif s_choice == "5":
+                strat = FibonacciStrategy()
+            elif s_choice == "6":
+                increment = float(input("Enter increment amount: "))
+                strat = DAlembertStrategy(increment)
+            else:
+                print("Invalid strategy.")
+                continue
+
+            results = current_betting_service.place_consecutive_bets(runs, base, prob, strat)
+            print("\n--- SIMULATION RESULTS ---")
+            for r in results:
+                print(r)
+
+        elif choice == "12":
             print("Exiting...")
             break
 

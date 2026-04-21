@@ -1,7 +1,7 @@
-# UC 02 : Stake Management Operations
+# UC 03 : Betting Mechanism
 # 
 # author : Developer 
-# version : 2.0
+# version : 3.0
 # 
 
 from src.app.ui.menu import menu 
