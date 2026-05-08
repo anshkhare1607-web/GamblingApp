@@ -1,5 +1,5 @@
 
-# GamblingApp# GamblingApp
+# GamblingApp
 
 GamblingApp is a command-line interface (CLI) based gambling simulation application built in Python. It allows users to create gambler profiles, manage betting sessions with predefined limits and thresholds, and simulate gambling games with real-time stake tracking and session management. The application uses MySQL for data persistence and includes robust input validation, session controls, and comprehensive statistics tracking.
 
